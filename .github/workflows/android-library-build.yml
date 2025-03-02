@@ -28,6 +28,8 @@ jobs:
         run: |
           mkdir -p /home/runner/work/ocean/ocean/ocean_build_android/thirdparty
           chmod -R 777 /home/runner/work/ocean/ocean/ocean_build_android/thirdparty
+          mkdir -p /home/runner/work/ocean/ocean/ocean_thirdparty_install_android
+          chmod -R 777 /home/runner/work/ocean/ocean/ocean_thirdparty_install_android
 
       - name: Build Third-Party Dependencies
         run: |
@@ -47,3 +49,13 @@ jobs:
           ANDROID_HOME: /usr/local/lib/android/sdk
           ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
           ANDROID_NDK: /usr/local/lib/android/sdk/ndk/27.2.12479018
+
+      - name: Archive built libraries
+        run: |
+          tar -czvf ocean_thirdparty_android.tar.gz -C /home/runner/work/ocean/ocean/ocean_thirdparty_install_android .
+
+      - name: Upload built libraries
+        uses: actions/upload-artifact@v3
+        with:
+          name: ocean-thirdparty-android
+          path: ocean_thirdparty_android.tar.gz
