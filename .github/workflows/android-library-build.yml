@@ -9,8 +9,8 @@ on:
 env:
   OCEAN_LINK_TYPE: static
   OCEAN_THIRDPARTY_INSTALL_PATH: ${{ github.workspace }}/ocean_thirdparty_install_android
-  # Set the build path as an absolute directory inside the workspace to ensure it's writable.
-  OCEAN_BUILD_PATH: ${{ github.workspace }}/ocean_build_android
+  # Set build path as a relative path so that it is created under the workspace
+  OCEAN_BUILD_PATH: ocean_build_android
   OCEAN_INSTALL_PATH: ${{ github.workspace }}/ocean_install_android
   ANDROID_NDK_VERSION: "27.0.12077973"
 
@@ -51,7 +51,7 @@ jobs:
 
       - name: Build Third-Party Libraries for Android
         shell: bash
-        working-directory: ${{ env.OCEAN_DEVELOPMENT_PATH }}
+        working-directory: ${{ github.workspace }}
         run: |
           ./build/cmake/build_thirdparty_android.sh \
           -c ${{ matrix.build_config }} \
@@ -62,7 +62,7 @@ jobs:
 
       - name: Build Ocean Android Libraries
         shell: bash
-        working-directory: ${{ env.OCEAN_DEVELOPMENT_PATH }}
+        working-directory: ${{ github.workspace }}
         run: |
           ./build/cmake/build_ocean_android.sh \
           -c ${{ matrix.build_config }} \
