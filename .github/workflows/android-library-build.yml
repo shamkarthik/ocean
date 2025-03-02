@@ -11,6 +11,9 @@ on:
 jobs:
   build-android:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build_config: [debug, release]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -34,7 +37,7 @@ jobs:
       - name: Build Third-Party Dependencies
         run: |
           ./build/cmake/build_thirdparty_android.sh \
-            -c debug \
+            -c ${{ matrix.build_config }} \
             -l static \
             -b "/home/runner/work/ocean/ocean/ocean_build_android/thirdparty" \
             -i "/home/runner/work/ocean/ocean/ocean_thirdparty_install_android" \
@@ -54,7 +57,7 @@ jobs:
         shell: bash
         run: |
           ./build/cmake/build_ocean_android.sh \
-          -c debug \
+          -c ${{ matrix.build_config }} \
           -l static \
           -b "/home/runner/work/ocean/ocean/ocean_build_android/ocean" \
           -i "/home/runner/work/ocean/ocean/ocean_install_android" \
@@ -63,17 +66,17 @@ jobs:
 
       - name: Archive built libraries
         run: |
-          tar -czvf ocean_thirdparty_android.tar.gz -C /home/runner/work/ocean/ocean/ocean_thirdparty_install_android .
-          tar -czvf ocean_android_library.tar.gz -C /home/runner/work/ocean/ocean/ocean_install_android .
+          tar -czvf ocean_thirdparty_android_${{ matrix.build_config }}.tar.gz -C /home/runner/work/ocean/ocean/ocean_thirdparty_install_android .
+          tar -czvf ocean_android_library_${{ matrix.build_config }}.tar.gz -C /home/runner/work/ocean/ocean/ocean_install_android .
 
       - name: Upload built libraries
         uses: actions/upload-artifact@v4
         with:
-          name: ocean-thirdparty-android
-          path: ocean_thirdparty_android.tar.gz
+          name: ocean-thirdparty-android-${{ matrix.build_config }}
+          path: ocean_thirdparty_android_${{ matrix.build_config }}.tar.gz
 
       - name: Upload Android Library
         uses: actions/upload-artifact@v4
         with:
-          name: ocean-android-library
-          path: ocean_android_library.tar.gz
+          name: ocean-android-library-${{ matrix.build_config }}
+          path: ocean_android_library_${{ matrix.build_config }}.tar.gz
