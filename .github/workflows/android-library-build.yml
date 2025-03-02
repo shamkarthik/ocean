@@ -1,4 +1,4 @@
-name: Build Third-Party Dependencies for Android
+name: Build Third-Party Dependencies and Ocean Libraries for Android
 
 on:
   push:
