@@ -1,81 +1,49 @@
-name: Build Ocean Android Libraries
+name: Build Third-Party Dependencies for Android
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   pull_request:
-    branches: [ "main" ]
-
-env:
-  OCEAN_LINK_TYPE: static
-  # Absolute install paths under the workspace:
-  OCEAN_THIRDPARTY_INSTALL_PATH: ${{ github.workspace }}/ocean_thirdparty_install_android
-  # Use an absolute build path inside the workspace to ensure it's writable.
-  OCEAN_BUILD_PATH: ${{ github.workspace }}/ocean_build_android
-  OCEAN_INSTALL_PATH: ${{ github.workspace }}/ocean_install_android
-  ANDROID_NDK_VERSION: "27.0.12077973"
+    branches:
+      - main
 
 jobs:
-  build:
-    name: Android Libraries (${{ matrix.build_config }}, static, ${{ matrix.android_abi }})
+  build-android:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        build_config: [debug, release]
-        android_abi: ["arm64-v8a"]
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Setup JDK
-        uses: actions/setup-java@v4
+      - name: Set up Java
+        uses: actions/setup-java@v3
         with:
-          distribution: temurin
+          distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
+      - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install NDK
-        run: sdkmanager --install "ndk;${{ env.ANDROID_NDK_VERSION }}"
-
-      - name: Set Environment Variables
-        shell: bash
+      - name: Create build directories
         run: |
-          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-          echo "ANDROID_NDK=$ANDROID_NDK" >> $GITHUB_ENV
-          echo "ANDROID_NDK_VERSION=${{ env.ANDROID_NDK_VERSION }}" >> $GITHUB_ENV
-          echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
+          mkdir -p /home/runner/work/ocean/ocean/ocean_build_android/thirdparty
+          chmod -R 777 /home/runner/work/ocean/ocean/ocean_build_android/thirdparty
 
-      - name: Build Third-Party Libraries for Android
-        shell: bash
+      - name: Build Third-Party Dependencies
         run: |
           ./build/cmake/build_thirdparty_android.sh \
-          -c ${{ matrix.build_config }} \
-          -l ${{ env.OCEAN_LINK_TYPE }} \
-          -b "${{ github.workspace }}/ocean_build_android/thirdparty" \
-          -i "${{ env.OCEAN_THIRDPARTY_INSTALL_PATH }}" \
-          --abi ${{ matrix.android_abi }}
-
-      - name: Build Ocean Android Libraries
-        shell: bash
-        run: |
-          ./build/cmake/build_ocean_android.sh \
-          -c ${{ matrix.build_config }} \
-          -l ${{ env.OCEAN_LINK_TYPE }} \
-          -b "${{ github.workspace }}/ocean_build_android/ocean" \
-          -i "${{ env.OCEAN_INSTALL_PATH }}" \
-          -t "${{ env.OCEAN_THIRDPARTY_INSTALL_PATH }}" \
-          --abi ${{ matrix.android_abi }}
-
-      - name: Upload Third-Party Libraries Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: thirdparty-libraries-android-${{ matrix.build_config }}-${{ matrix.android_abi }}
-          path: ${{ env.OCEAN_THIRDPARTY_INSTALL_PATH }}
-
-      - name: Upload Ocean Android Libraries Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ocean-android-libraries-${{ matrix.build_config }}-${{ matrix.android_abi }}
-          path: ${{ env.OCEAN_INSTALL_PATH }}
+            -c debug \
+            -l static \
+            -b "/home/runner/work/ocean/ocean/ocean_build_android/thirdparty" \
+            -i "/home/runner/work/ocean/ocean/ocean_thirdparty_install_android" \
+            --abi arm64-v8a
+        env:
+          OCEAN_LINK_TYPE: static
+          OCEAN_THIRDPARTY_INSTALL_PATH: /home/runner/work/ocean/ocean/ocean_thirdparty_install_android
+          OCEAN_BUILD_PATH: /home/runner/work/ocean/ocean/ocean_build_android
+          OCEAN_INSTALL_PATH: /home/runner/work/ocean/ocean/ocean_install_android
+          ANDROID_NDK_VERSION: 27.0.12077973
+          JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.14-7/x64
+          ANDROID_HOME: /usr/local/lib/android/sdk
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+          ANDROID_NDK: /usr/local/lib/android/sdk/ndk/27.2.12479018
