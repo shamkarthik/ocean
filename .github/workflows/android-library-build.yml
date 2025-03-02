@@ -11,12 +11,12 @@ env:
   OCEAN_THIRDPARTY_INSTALL_PATH: ${{ github.workspace }}/ocean_thirdparty_install_android
   OCEAN_BUILD_PATH: ${{ github.workspace }}/ocean_build_android
   OCEAN_INSTALL_PATH: ${{ github.workspace }}/ocean_install_android
-  ANDROID_NDK_VERSION: "27.0.12077973" # Updated NDK Version to 27.0.12077973
-  ANDROID_ABI: "arm64-v8a" # Or ABIs you want to build, space-separated e.g., "arm64-v8a armeabi-v7a"
+  ANDROID_NDK_VERSION: "27.0.12077973" # Make sure this version is available
+  ANDROID_ABI: "arm64-v8a"             # Set to the ABI(s) you want to build
 
 jobs:
   build:
-    name: Android Libraries (${{ matrix.build_config }}, static, ${{ github.env.ANDROID_ABI }})
+    name: Android Libraries (${{ matrix.build_config }}, static, ${{ env.ANDROID_ABI }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -28,14 +28,14 @@ jobs:
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin' # Corrected distribution name (lowercase)
-          java-version: '17'      # Using Java 17 (LTS, well-supported)
+          distribution: temurin
+          java-version: '17'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
       - name: Install NDK
-        run: sdkmanager --install ndk-${{ env.ANDROID_NDK_VERSION }} # Now using version 27.0.12077973
+        run: sdkmanager --install "ndk-${{ env.ANDROID_NDK_VERSION }}"
 
       - name: Set Environment Variables
         shell: bash
@@ -51,12 +51,25 @@ jobs:
       - name: Build Third-Party Libraries for Android
         shell: bash
         working-directory: ${{ env.OCEAN_DEVELOPMENT_PATH }}
-        run: ./build/cmake/build_thirdparty_android.sh -c ${{ matrix.build_config }} -l ${{ env.OCEAN_LINK_TYPE }} -b "${{ env.GITHUB_WORKSPACE }}/ocean_thirdparty_build_android" -i "${{ env.OCEAN_THIRDPARTY_INSTALL_PATH }}" --abi ${{ env.ANDROID_ABI }}
+        run: |
+          ./build/cmake/build_thirdparty_android.sh \
+            -c ${{ matrix.build_config }} \
+            -l ${{ env.OCEAN_LINK_TYPE }} \
+            -b "${{ github.workspace }}/ocean_thirdparty_build_android" \
+            -i "${{ env.OCEAN_THIRDPARTY_INSTALL_PATH }}" \
+            --abi ${{ env.ANDROID_ABI }}
 
       - name: Build Ocean Android Libraries
         shell: bash
         working-directory: ${{ env.OCEAN_DEVELOPMENT_PATH }}
-        run: ./build/cmake/build_ocean_android.sh -c ${{ matrix.build_config }} -l ${{ env.OCEAN_LINK_TYPE }} -b "${{ env.GITHUB_WORKSPACE }}/ocean_build_android" -i "${{ env.OCEAN_INSTALL_PATH }}" -t "${{ env.OCEAN_THIRDPARTY_INSTALL_PATH }}" --abi ${{ env.ANDROID_ABI }}
+        run: |
+          ./build/cmake/build_ocean_android.sh \
+            -c ${{ matrix.build_config }} \
+            -l ${{ env.OCEAN_LINK_TYPE }} \
+            -b "${{ github.workspace }}/ocean_build_android" \
+            -i "${{ env.OCEAN_INSTALL_PATH }}" \
+            -t "${{ env.OCEAN_THIRDPARTY_INSTALL_PATH }}" \
+            --abi ${{ env.ANDROID_ABI }}
 
       - name: Upload Third-Party Libraries Artifact
         uses: actions/upload-artifact@v4
