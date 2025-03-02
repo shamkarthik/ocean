@@ -11,7 +11,7 @@ env:
   OCEAN_THIRDPARTY_INSTALL_PATH: ${{ github.workspace }}/ocean_thirdparty_install_android
   OCEAN_BUILD_PATH: ${{ github.workspace }}/ocean_build_android
   OCEAN_INSTALL_PATH: ${{ github.workspace }}/ocean_install_android
-  ANDROID_NDK_VERSION: "27.0.12077973" # Updated NDK Version to 27.0.12077973
+  ANDROID_NDK_VERSION: "27.0.12077973" # Updated NDK version
 
 jobs:
   build:
@@ -20,7 +20,7 @@ jobs:
     strategy:
       matrix:
         build_config: [debug, release]
-        android_abi: ["arm64-v8a"] # Add other ABIs as needed, e.g., ["arm64-v8a", "armeabi-v7a"]
+        android_abi: ["arm64-v8a"]  # Add more ABIs if needed
 
     steps:
       - uses: actions/checkout@v4
@@ -28,14 +28,14 @@ jobs:
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin' # Corrected distribution name (lowercase)
-          java-version: '17'      # Using Java 17 (LTS, well-supported)
+          distribution: temurin
+          java-version: '17'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
       - name: Install NDK
-        run: sdkmanager --install ndk-${{ env.ANDROID_NDK_VERSION }} # Now using version 27.0.12077973
+        run: sdkmanager --install "ndk;${{ env.ANDROID_NDK_VERSION }}"
 
       - name: Set Environment Variables
         shell: bash
