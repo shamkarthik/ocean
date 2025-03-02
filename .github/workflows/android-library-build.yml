@@ -11,7 +11,7 @@ env:
   OCEAN_THIRDPARTY_INSTALL_PATH: ${{ github.workspace }}/ocean_thirdparty_install_android
   OCEAN_BUILD_PATH: ${{ github.workspace }}/ocean_build_android
   OCEAN_INSTALL_PATH: ${{ github.workspace }}/ocean_install_android
-  ANDROID_NDK_VERSION: "28.0.13004108" # Updated NDK Version!
+  ANDROID_NDK_VERSION: "27.0.12077973" # Updated NDK Version to 27.0.12077973
   ANDROID_ABI: "arm64-v8a" # Or ABIs you want to build, space-separated e.g., "arm64-v8a armeabi-v7a"
 
 jobs:
@@ -35,7 +35,7 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Install NDK
-        run: sdkmanager --install ndk-${{ env.ANDROID_NDK_VERSION }} # Now using version 28.0.13004108
+        run: sdkmanager --install ndk-${{ env.ANDROID_NDK_VERSION }} # Now using version 27.0.12077973
 
       - name: Set Environment Variables
         shell: bash
