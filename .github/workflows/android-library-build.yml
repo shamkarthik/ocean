@@ -9,8 +9,6 @@ on:
 env:
   OCEAN_LINK_TYPE: static
   OCEAN_THIRDPARTY_INSTALL_PATH: ${{ github.workspace }}/ocean_thirdparty_install_android
-  # Set build path as a relative path so that it is created under the workspace
-  OCEAN_BUILD_PATH: ocean_build_android
   OCEAN_INSTALL_PATH: ${{ github.workspace }}/ocean_install_android
   ANDROID_NDK_VERSION: "27.0.12077973"
 
@@ -56,7 +54,7 @@ jobs:
           ./build/cmake/build_thirdparty_android.sh \
           -c ${{ matrix.build_config }} \
           -l ${{ env.OCEAN_LINK_TYPE }} \
-          -b "${{ env.OCEAN_BUILD_PATH }}/thirdparty" \
+          -b "${{ github.workspace }}/ocean_build_android/thirdparty" \
           -i "${{ env.OCEAN_THIRDPARTY_INSTALL_PATH }}" \
           --abi ${{ matrix.android_abi }}
 
@@ -67,7 +65,7 @@ jobs:
           ./build/cmake/build_ocean_android.sh \
           -c ${{ matrix.build_config }} \
           -l ${{ env.OCEAN_LINK_TYPE }} \
-          -b "${{ env.OCEAN_BUILD_PATH }}/ocean" \
+          -b "${{ github.workspace }}/ocean_build_android/ocean" \
           -i "${{ env.OCEAN_INSTALL_PATH }}" \
           -t "${{ env.OCEAN_THIRDPARTY_INSTALL_PATH }}" \
           --abi ${{ matrix.android_abi }}
