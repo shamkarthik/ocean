@@ -1,0 +1,61 @@
+name: Android Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # You can also use macOS or self-hosted runners
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: ' Temurin'
+          java-version: '22' # Or your recommended JDK version
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK
+        run: sdkmanager --install ndk-${{ env.ANDROID_NDK_VERSION }} # Or specify your NDK version
+
+      - name: Set Environment Variables
+        shell: bash
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "ANDROID_NDK=$ANDROID_NDK" >> $GITHUB_ENV
+          echo "ANDROID_NDK_VERSION=${{ env.ANDROID_NDK_VERSION }}" >> $GITHUB_ENV
+          echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
+          echo "OCEAN_DEVELOPMENT_PATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV # Assuming your repo root is the development path
+          echo "OCEAN_THIRDPARTY_PATH=$GITHUB_WORKSPACE/install_ocean_thirdparty_android" >> $GITHUB_ENV # Adjust if needed
+
+      - name: Build Third-Party Libraries
+        shell: bash
+        working-directory: ${{ env.OCEAN_DEVELOPMENT_PATH }}
+        run: ./build/cmake/build_thirdparty_android.sh -c debug,release -l static -b "${{ env.GITHUB_WORKSPACE }}/build_ocean_thirdparty" -i "${{ env.OCEAN_THIRDPARTY_PATH }}" --abi arm64-v8a # Adjust ABI and build config as needed
+
+      - name: Build Ocean Libraries
+        shell: bash
+        working-directory: ${{ env.OCEAN_DEVELOPMENT_PATH }}
+        run: ./build/cmake/build_ocean_android.sh -c debug,release -l static -b "${{ env.GITHUB_WORKSPACE }}/build_ocean" -i "${{ env.INSTALL_OCEAN }}" -t "${{ env.OCEAN_THIRDPARTY_PATH }}" --abi arm64-v8a # Adjust ABI and build config as needed
+
+      - name: Build Android App (Gradle)
+        shell: bash
+        working-directory: ${{ env.OCEAN_DEVELOPMENT_PATH }}/build/gradle/application/ocean/demo/base/console/android
+        run: ./gradlew assembleDebug # Or assembleRelease for release build
+
+      - name: Upload APK Artifact (Debug) # Optional
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-app-debug.apk
+          path: ${{ env.OCEAN_DEVELOPMENT_PATH }}/build/gradle/application/ocean/demo/base/console/android/app/build/outputs/apk/debug/app-debug.apk
+
+
+      # Add more steps for testing, release builds, etc. as needed
