@@ -9,8 +9,8 @@ on:
 env:
   OCEAN_LINK_TYPE: static
   OCEAN_THIRDPARTY_INSTALL_PATH: ${{ github.workspace }}/ocean_thirdparty_install_android
-  # Use a relative build path so the directory is writable
-  OCEAN_BUILD_PATH: ocean_build_android
+  # Set the build path as an absolute directory inside the workspace to ensure it's writable.
+  OCEAN_BUILD_PATH: ${{ github.workspace }}/ocean_build_android
   OCEAN_INSTALL_PATH: ${{ github.workspace }}/ocean_install_android
   ANDROID_NDK_VERSION: "27.0.12077973"
 
