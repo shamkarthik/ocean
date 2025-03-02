@@ -28,8 +28,8 @@ jobs:
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'Temurin'
-          java-version: '22' # Or your recommended JDK version
+          distribution: 'temurin' # Corrected distribution name (lowercase)
+          java-version: '17'      # Using Java 17 (LTS, well-supported)
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
