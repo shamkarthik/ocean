@@ -35,7 +35,10 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Install NDK
-        run: sdkmanager --install ndk-${{ env.ANDROID_NDK_VERSION }}
+        run: sdkmanager --install ndk-${{ env.ANDROID_NDK_VERSION }} # This step will likely still fail for now
+
+      - name: List Available NDK Packages  # ADD THIS STEP
+        run: sdkmanager --list --sdk_root=$ANDROID_HOME
 
       - name: Set Environment Variables
         shell: bash
