@@ -8,6 +8,7 @@ on:
 
 env:
   OCEAN_LINK_TYPE: static
+  # Absolute install paths under the workspace:
   OCEAN_THIRDPARTY_INSTALL_PATH: ${{ github.workspace }}/ocean_thirdparty_install_android
   OCEAN_INSTALL_PATH: ${{ github.workspace }}/ocean_install_android
   ANDROID_NDK_VERSION: "27.0.12077973"
@@ -43,9 +44,6 @@ jobs:
           echo "ANDROID_NDK=$ANDROID_NDK" >> $GITHUB_ENV
           echo "ANDROID_NDK_VERSION=${{ env.ANDROID_NDK_VERSION }}" >> $GITHUB_ENV
           echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
-          echo "OCEAN_DEVELOPMENT_PATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
-          echo "OCEAN_THIRDPARTY_INSTALL_PATH=$GITHUB_WORKSPACE/ocean_thirdparty_install_android" >> $GITHUB_ENV
-          echo "OCEAN_INSTALL_PATH=$GITHUB_WORKSPACE/ocean_install_android" >> $GITHUB_ENV
 
       - name: Build Third-Party Libraries for Android
         shell: bash
