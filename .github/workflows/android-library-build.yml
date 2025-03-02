@@ -55,7 +55,7 @@ jobs:
           tar -czvf ocean_thirdparty_android.tar.gz -C /home/runner/work/ocean/ocean/ocean_thirdparty_install_android .
 
       - name: Upload built libraries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ocean-thirdparty-android
           path: ocean_thirdparty_android.tar.gz
