@@ -26,6 +26,14 @@ on:
         options:
           - debug
           - release
+      link_type:
+        description: 'Link type (static or shared)'
+        required: true
+        default: 'static'
+        type: choice
+        options:
+          - static
+          - shared
 
 jobs:
   build-android:
@@ -58,17 +66,18 @@ jobs:
           else
             echo "ABI=${{ inputs.abi }}" >> $GITHUB_ENV
           fi
+          echo "LINK_TYPE=${{ inputs.link_type }}" >> $GITHUB_ENV
 
       - name: Build Third-Party Dependencies
         run: |
           ./build/cmake/build_thirdparty_android.sh \
             -c ${{ inputs.build_config }} \
-            -l static \
+            -l ${{ env.LINK_TYPE }} \
             -b "/home/runner/work/ocean/ocean/ocean_build_android/thirdparty" \
             -i "/home/runner/work/ocean/ocean/ocean_thirdparty_install_android" \
             --abi $ABI
         env:
-          OCEAN_LINK_TYPE: static
+          OCEAN_LINK_TYPE: ${{ env.LINK_TYPE }}
           OCEAN_THIRDPARTY_INSTALL_PATH: /home/runner/work/ocean/ocean/ocean_thirdparty_install_android
           OCEAN_BUILD_PATH: /home/runner/work/ocean/ocean/ocean_build_android
           OCEAN_INSTALL_PATH: /home/runner/work/ocean/ocean/ocean_install_android
@@ -82,26 +91,26 @@ jobs:
         shell: bash
         run: |
           ./build/cmake/build_ocean_android.sh \
-          -c ${{ inputs.build_config }} \
-          -l static \
-          -b "/home/runner/work/ocean/ocean/ocean_build_android/ocean" \
-          -i "/home/runner/work/ocean/ocean/ocean_install_android" \
-          -t "/home/runner/work/ocean/ocean/ocean_thirdparty_install_android" \
-          --abi $ABI
+            -c ${{ inputs.build_config }} \
+            -l ${{ env.LINK_TYPE }} \
+            -b "/home/runner/work/ocean/ocean/ocean_build_android/ocean" \
+            -i "/home/runner/work/ocean/ocean/ocean_install_android" \
+            -t "/home/runner/work/ocean/ocean/ocean_thirdparty_install_android" \
+            --abi $ABI
 
       - name: Archive built libraries
         run: |
-          tar -czvf ocean_thirdparty_android_${{ inputs.build_config }}.tar.gz -C /home/runner/work/ocean/ocean/ocean_thirdparty_install_android .
-          tar -czvf ocean_android_library_${{ inputs.build_config }}.tar.gz -C /home/runner/work/ocean/ocean/ocean_install_android .
+          tar -czvf ocean_thirdparty_android_${{ inputs.build_config }}_${{ env.LINK_TYPE }}.tar.gz -C /home/runner/work/ocean/ocean/ocean_thirdparty_install_android .
+          tar -czvf ocean_android_library_${{ inputs.build_config }}_${{ env.LINK_TYPE }}.tar.gz -C /home/runner/work/ocean/ocean/ocean_install_android .
 
       - name: Upload built libraries
         uses: actions/upload-artifact@v4
         with:
-          name: ocean-thirdparty-android-${{ inputs.build_config }}
-          path: ocean_thirdparty_android_${{ inputs.build_config }}.tar.gz
+          name: ocean-thirdparty-android-${{ inputs.build_config }}-${{ env.LINK_TYPE }}
+          path: ocean_thirdparty_android_${{ inputs.build_config }}_${{ env.LINK_TYPE }}.tar.gz
 
       - name: Upload Android Library
         uses: actions/upload-artifact@v4
         with:
-          name: ocean-android-library-${{ inputs.build_config }}
-          path: ocean_android_library_${{ inputs.build_config }}.tar.gz
+          name: ocean-android-library-${{ inputs.build_config }}-${{ env.LINK_TYPE }}
+          path: ocean_android_library_${{ inputs.build_config }}_${{ env.LINK_TYPE }}.tar.gz
