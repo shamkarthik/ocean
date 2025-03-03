@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       abi:
-        description: 'ABI to build for'
+        description: "ABI to build for"
         required: true
-        default: 'arm64-v8a'
+        default: "arm64-v8a"
         type: choice
         options:
           - arm64-v8a
@@ -15,29 +15,29 @@ on:
           - x86_64
           - custom
       custom_abi:
-        description: 'Custom ABI (if "custom" is selected)'
+        description: "Custom ABI (if 'custom' is selected)"
         required: false
         type: string
       build_config:
-        description: 'Build configuration (debug or release)'
+        description: "Build configuration (debug or release)"
         required: true
-        default: 'debug'
+        default: "debug"
         type: choice
         options:
           - debug
           - release
       link_type:
-        description: 'Link type (static or shared)'
+        description: "Link type (static or shared)"
         required: true
-        default: 'static'
+        default: "static"
         type: choice
         options:
           - static
           - shared
       android_sdk_version:
-        description: 'Android SDK version (e.g., android-35)'
+        description: "Android SDK Version"
         required: false
-        default: 'android-35'
+        default: "android-35"
         type: string
 
 jobs:
@@ -50,29 +50,18 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '17'
-      
-      - name: Install Android SDK Dependencies Manually
-        run: |
-          yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT \
-            "platform-tools" \
-            "build-tools;35.0.0" \
-            "platforms;android-35" \
-            "ndk;27.0.12077973"
+          distribution: "temurin"
+          java-version: "17"
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          cmdline-tools-version: latest
-          accept-android-sdk-licenses: true
-          log-accepted-android-sdk-licenses: true
-          packages: |
-            platform-tools
-            build-tools;35.0.0
-            platforms;android-35
-            ndk;27.0.12077973
-
+        run: |
+          export ANDROID_SDK_ROOT=$ANDROID_HOME
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install \
+            "platform-tools" \
+            "build-tools;35.0.0" \
+            "platforms;${{ inputs.android_sdk_version }}" \
+            "ndk;27.0.12077973"
 
       - name: Create build directories
         run: |
@@ -90,7 +79,6 @@ jobs:
             echo "ABI=${{ inputs.abi }}" >> $GITHUB_ENV
           fi
           echo "LINK_TYPE=${{ inputs.link_type }}" >> $GITHUB_ENV
-          echo "ANDROID_SDK_VERSION=${{ inputs.android_sdk_version }}" >> $GITHUB_ENV
 
       - name: Build Third-Party Dependencies
         run: |
@@ -99,17 +87,16 @@ jobs:
             -l ${{ env.LINK_TYPE }} \
             -b "/home/runner/work/ocean/ocean/ocean_build_android/thirdparty" \
             -i "/home/runner/work/ocean/ocean/ocean_thirdparty_install_android" \
-            -s ${{ env.ANDROID_SDK_VERSION }} \
-            --abi $ABI
+            --abi $ABI \
+            --sdk ${{ inputs.android_sdk_version }}
         env:
           OCEAN_LINK_TYPE: ${{ env.LINK_TYPE }}
           OCEAN_THIRDPARTY_INSTALL_PATH: /home/runner/work/ocean/ocean/ocean_thirdparty_install_android
           OCEAN_BUILD_PATH: /home/runner/work/ocean/ocean/ocean_build_android
           OCEAN_INSTALL_PATH: /home/runner/work/ocean/ocean/ocean_install_android
-          ANDROID_SDK_VERSION: ${{ env.ANDROID_SDK_VERSION }}
           ANDROID_HOME: /usr/local/lib/android/sdk
           ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
-          ANDROID_NDK: /usr/local/lib/android/sdk/ndk/${{ env.ANDROID_SDK_VERSION }}
+          ANDROID_NDK: /usr/local/lib/android/sdk/ndk/27.0.12077973
 
       - name: Build Ocean Android Libraries
         shell: bash
@@ -120,8 +107,8 @@ jobs:
             -b "/home/runner/work/ocean/ocean/ocean_build_android/ocean" \
             -i "/home/runner/work/ocean/ocean/ocean_install_android" \
             -t "/home/runner/work/ocean/ocean/ocean_thirdparty_install_android" \
-            -s ${{ env.ANDROID_SDK_VERSION }} \
-            --abi $ABI
+            --abi $ABI \
+            --sdk ${{ inputs.android_sdk_version }}
 
       - name: Archive built libraries
         run: |
