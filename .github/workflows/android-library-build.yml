@@ -64,7 +64,7 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          cmdline-tools-version: 12266719
+          cmdline-tools-version: latest
           accept-android-sdk-licenses: true
           log-accepted-android-sdk-licenses: true
           packages: |
@@ -72,6 +72,7 @@ jobs:
             build-tools;35.0.0
             platforms;android-35
             ndk;27.0.12077973
+
 
       - name: Create build directories
         run: |
