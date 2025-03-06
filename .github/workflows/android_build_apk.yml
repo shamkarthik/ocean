@@ -80,6 +80,12 @@ jobs:
           export OCEAN_THIRDPARTY_PATH=/home/runner/work/ocean/ocean/ocean_thirdparty_install_android
           export OCEAN_INSTALL_PATH=/home/runner/work/ocean/ocean/ocean_install_android
 
+      - name: Debug Third-Party Cache
+        run: ls -l $OCEAN_THIRDPARTY_PATH
+
+      - name: Fix Permissions
+        run: sudo chmod -R 777 $OCEAN_THIRDPARTY_PATH
+
       - name: Check if Third-Party Dependencies Exist
         id: check_thirdparty
         run: |
@@ -156,4 +162,3 @@ jobs:
                 echo "Skipping $app as directory does not exist."
               fi
           done
-
