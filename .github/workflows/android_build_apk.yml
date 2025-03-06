@@ -110,6 +110,12 @@ jobs:
           ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
           ANDROID_NDK: /usr/local/lib/android/sdk/ndk/27.0.12077973
 
+      - name: Cache Third-Party Dependencies
+        uses: actions/cache@v3
+        with:
+          path: /home/runner/work/ocean/ocean/ocean_thirdparty_install_android
+          key: thirdparty-${{ runner.os }}-${{ inputs.abi }}-${{ inputs.build_config }}
+
       - name: Build Ocean Android Libraries
         shell: bash
         run: |
@@ -121,6 +127,12 @@ jobs:
             -t "/home/runner/work/ocean/ocean/ocean_thirdparty_install_android" \
             --abi $ABI \
             --sdk ${{ inputs.android_sdk_version }}
+
+      - name: Cache Ocean Android Libraries
+        uses: actions/cache@v3
+        with:
+          path: /home/runner/work/ocean/ocean/ocean_install_android
+          key: ocean-${{ runner.os }}-${{ inputs.abi }}-${{ inputs.build_config }}
 
       - name: Build and Upload Android Apps Sequentially
         run: |
