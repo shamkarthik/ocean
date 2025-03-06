@@ -61,8 +61,8 @@ option(OCEAN_BUILD_TESTS "When enabled, the desktop test libraries and applicati
 
 # Build config and definitions
 set(CMAKE_CXX_STANDARD 20)
-set(OCEAN_BUILD_DEMOS FALSE)
-set(OCEAN_BUILD_TESTS FALSE)
+set(OCEAN_BUILD_DEMOS TRUE)
+set(OCEAN_BUILD_TESTS TRUE)
 set(OCEAN_IMPL_DIR "${CMAKE_CURRENT_LIST_DIR}/impl")
 
 ocean_translate_system_name(${CMAKE_HOST_SYSTEM_NAME} OCEAN_HOST_SYSTEM_NAME)
