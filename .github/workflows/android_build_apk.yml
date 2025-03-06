@@ -75,10 +75,15 @@ jobs:
           path: /home/runner/work/ocean/ocean/ocean_install_android
           key: ocean-${{ runner.os }}-${{ inputs.abi }}-${{ inputs.build_config }}
 
+      - name: Set Environment Variables
+        run: |
+          export OCEAN_THIRDPARTY_PATH=/home/runner/work/ocean/ocean/ocean_thirdparty_install_android
+          export OCEAN_INSTALL_PATH=/home/runner/work/ocean/ocean/ocean_install_android
+
       - name: Check if Third-Party Dependencies Exist
         id: check_thirdparty
         run: |
-          if [ -d "/home/runner/work/ocean/ocean/ocean_thirdparty_install_android" ] && [ "$(ls -A /home/runner/work/ocean/ocean/ocean_thirdparty_install_android)" ]; then
+          if [ -d "$OCEAN_THIRDPARTY_PATH" ] && [ "$(ls -A $OCEAN_THIRDPARTY_PATH)" ]; then
             echo "THIRDPARTY_EXISTS=true" >> $GITHUB_ENV
           else
             echo "THIRDPARTY_EXISTS=false" >> $GITHUB_ENV
@@ -91,20 +96,20 @@ jobs:
             -c ${{ inputs.build_config }} \
             -l ${{ inputs.link_type }} \
             -b "/home/runner/work/ocean/ocean/ocean_build_android/thirdparty" \
-            -i "/home/runner/work/ocean/ocean/ocean_thirdparty_install_android" \
+            -i "$OCEAN_THIRDPARTY_PATH" \
             --abi ${{ inputs.abi }} \
             --sdk ${{ inputs.android_sdk_version }}
 
       - name: Cache Third-Party Dependencies
         uses: actions/cache@v3
         with:
-          path: /home/runner/work/ocean/ocean/ocean_thirdparty_install_android
+          path: $OCEAN_THIRDPARTY_PATH
           key: thirdparty-${{ runner.os }}-${{ inputs.abi }}-${{ inputs.build_config }}
 
       - name: Check if Ocean Android Libraries Exist
         id: check_ocean_lib
         run: |
-          if [ -d "/home/runner/work/ocean/ocean/ocean_install_android" ] && [ "$(ls -A /home/runner/work/ocean/ocean/ocean_install_android)" ]; then
+          if [ -d "$OCEAN_INSTALL_PATH" ] && [ "$(ls -A $OCEAN_INSTALL_PATH)" ]; then
             echo "OCEAN_LIB_EXISTS=true" >> $GITHUB_ENV
           else
             echo "OCEAN_LIB_EXISTS=false" >> $GITHUB_ENV
@@ -118,15 +123,15 @@ jobs:
             -c ${{ inputs.build_config }} \
             -l ${{ inputs.link_type }} \
             -b "/home/runner/work/ocean/ocean/ocean_build_android/ocean" \
-            -i "/home/runner/work/ocean/ocean/ocean_install_android" \
-            -t "/home/runner/work/ocean/ocean/ocean_thirdparty_install_android" \
+            -i "$OCEAN_INSTALL_PATH" \
+            -t "$OCEAN_THIRDPARTY_PATH" \
             --abi ${{ inputs.abi }} \
             --sdk ${{ inputs.android_sdk_version }}
 
       - name: Cache Ocean Android Libraries
         uses: actions/cache@v3
         with:
-          path: /home/runner/work/ocean/ocean/ocean_install_android
+          path: $OCEAN_INSTALL_PATH
           key: ocean-${{ runner.os }}-${{ inputs.abi }}-${{ inputs.build_config }}
 
       - name: Build and Upload Android Apps Sequentially
@@ -151,3 +156,4 @@ jobs:
                 echo "Skipping $app as directory does not exist."
               fi
           done
+
