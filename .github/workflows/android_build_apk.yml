@@ -88,11 +88,11 @@ jobs:
           echo "OCEAN_INSTALL_PATH=$OCEAN_INSTALL_PATH" >> $GITHUB_ENV
           echo "OCEAN_DEVELOPMENT_PATH=$OCEAN_DEVELOPMENT_PATH" >> $GITHUB_ENV
 
-      - name: Set Eigen3 Directory and CMAKE_PREFIX_PATH
+      - name: Set Eigen3 Directory and Update CMAKE_PREFIX_PATH
         run: |
-          # Assuming Eigen3 is installed under the third-party install path in a folder named 'eigen'
-          export Eigen3_DIR=$OCEAN_THIRDPARTY_PATH/eigen
-          export CMAKE_PREFIX_PATH=$OCEAN_THIRDPARTY_PATH:$CMAKE_PREFIX_PATH
+          # Adjust the path below if Eigen3 is installed in a different folder.
+          export Eigen3_DIR=$OCEAN_THIRDPARTY_PATH/eigen3
+          export CMAKE_PREFIX_PATH=$OCEAN_THIRDPARTY_PATH/eigen3:$CMAKE_PREFIX_PATH
           echo "Eigen3_DIR=$Eigen3_DIR" >> $GITHUB_ENV
           echo "CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH" >> $GITHUB_ENV
 
