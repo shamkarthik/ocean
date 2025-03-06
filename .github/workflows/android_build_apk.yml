@@ -83,11 +83,19 @@ jobs:
         run: |
           export OCEAN_THIRDPARTY_PATH=/home/runner/work/ocean/ocean/ocean_thirdparty_install_android
           export OCEAN_INSTALL_PATH=/home/runner/work/ocean/ocean/ocean_install_android
+          export OCEAN_DEVELOPMENT_PATH=/home/runner/work/ocean/ocean
           echo "OCEAN_THIRDPARTY_PATH=$OCEAN_THIRDPARTY_PATH" >> $GITHUB_ENV
           echo "OCEAN_INSTALL_PATH=$OCEAN_INSTALL_PATH" >> $GITHUB_ENV
-          echo "OCEAN_DEVELOPMENT_PATH=/home/runner/work/ocean/ocean" >> $GITHUB_ENV
-          echo "OCEAN_DEVELOPMENT_PATH is set to: /home/runner/work/ocean/ocean"
-      
+          echo "OCEAN_DEVELOPMENT_PATH=$OCEAN_DEVELOPMENT_PATH" >> $GITHUB_ENV
+
+      - name: Set Eigen3 Directory and CMAKE_PREFIX_PATH
+        run: |
+          # Assuming Eigen3 is installed under the third-party install path in a folder named 'eigen'
+          export Eigen3_DIR=$OCEAN_THIRDPARTY_PATH/eigen
+          export CMAKE_PREFIX_PATH=$OCEAN_THIRDPARTY_PATH:$CMAKE_PREFIX_PATH
+          echo "Eigen3_DIR=$Eigen3_DIR" >> $GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH" >> $GITHUB_ENV
+
       - name: Debug Third-Party Cache
         run: ls -l $OCEAN_THIRDPARTY_PATH
 
