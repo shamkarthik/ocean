@@ -63,6 +63,18 @@ jobs:
             "platforms;${{ inputs.android_sdk_version }}" \
             "ndk;27.0.12077973"
 
+      - name: Restore Third-Party Dependencies Cache
+        uses: actions/cache@v3
+        with:
+          path: /home/runner/work/ocean/ocean/ocean_thirdparty_install_android
+          key: thirdparty-${{ runner.os }}-${{ inputs.abi }}-${{ inputs.build_config }}
+
+      - name: Restore Ocean Android Libraries Cache
+        uses: actions/cache@v3
+        with:
+          path: /home/runner/work/ocean/ocean/ocean_install_android
+          key: ocean-${{ runner.os }}-${{ inputs.abi }}-${{ inputs.build_config }}
+
       - name: Create build directories
         run: |
           mkdir -p /home/runner/work/ocean/ocean/ocean_build_android/thirdparty
@@ -119,12 +131,17 @@ jobs:
             "demo/tracking/similaritytracker" \
             "demo/cv/detector/linedetector" \
             "shark"; do
-              cd $OCEAN_DEVELOPMENT_PATH/build/gradle/application/ocean/$app/android
-              ./gradlew assemble
-              cp app/build/outputs/apk/debug/app-debug.apk ocean_${app//\//_}_debug.apk
-              cp app/build/outputs/apk/release/app-release.apk ocean_${app//\//_}_release.apk
-
-              # Upload APKs immediately after building each app
-              gh run upload-artifact --name ocean_${app//\//_}_apk --path ocean_${app//\//_}_debug.apk
-              gh run upload-artifact --name ocean_${app//\//_}_apk --path ocean_${app//\//_}_release.apk
+              APP_DIR="$OCEAN_DEVELOPMENT_PATH/build/gradle/application/ocean/$app/android"
+              if [ -d "$APP_DIR" ]; then
+                cd "$APP_DIR"
+                ./gradlew assemble
+                cp app/build/outputs/apk/debug/app-debug.apk ocean_${app//\//_}_debug.apk
+                cp app/build/outputs/apk/release/app-release.apk ocean_${app//\//_}_release.apk
+                
+                # Upload APKs immediately after building each app
+                gh run upload-artifact --name ocean_${app//\//_}_apk --path ocean_${app//\//_}_debug.apk
+                gh run upload-artifact --name ocean_${app//\//_}_apk --path ocean_${app//\//_}_release.apk
+              else
+                echo "Skipping $app as directory does not exist."
+              fi
           done
