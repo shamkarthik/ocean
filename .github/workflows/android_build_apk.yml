@@ -75,40 +75,25 @@ jobs:
           path: /home/runner/work/ocean/ocean/ocean_install_android
           key: ocean-${{ runner.os }}-${{ inputs.abi }}-${{ inputs.build_config }}
 
-      - name: Create build directories
+      - name: Check if Third-Party Dependencies Exist
+        id: check_thirdparty
         run: |
-          mkdir -p /home/runner/work/ocean/ocean/ocean_build_android/thirdparty
-          chmod -R 777 /home/runner/work/ocean/ocean/ocean_build_android/thirdparty
-          mkdir -p /home/runner/work/ocean/ocean/ocean_thirdparty_install_android
-          chmod -R 777 /home/runner/work/ocean/ocean/ocean_thirdparty_install_android
-
-      - name: Determine ABI
-        id: abi_selection
-        run: |
-          if [[ "${{ inputs.abi }}" == "custom" ]]; then
-            echo "ABI=${{ inputs.custom_abi }}" >> $GITHUB_ENV
+          if [ -d "/home/runner/work/ocean/ocean/ocean_thirdparty_install_android" ] && [ "$(ls -A /home/runner/work/ocean/ocean/ocean_thirdparty_install_android)" ]; then
+            echo "THIRDPARTY_EXISTS=true" >> $GITHUB_ENV
           else
-            echo "ABI=${{ inputs.abi }}" >> $GITHUB_ENV
+            echo "THIRDPARTY_EXISTS=false" >> $GITHUB_ENV
           fi
-          echo "LINK_TYPE=${{ inputs.link_type }}" >> $GITHUB_ENV
 
-      - name: Build Third-Party Dependencies
+      - name: Build Third-Party Dependencies (if not cached)
+        if: env.THIRDPARTY_EXISTS == 'false'
         run: |
           ./build/cmake/build_thirdparty_android.sh \
             -c ${{ inputs.build_config }} \
-            -l ${{ env.LINK_TYPE }} \
+            -l ${{ inputs.link_type }} \
             -b "/home/runner/work/ocean/ocean/ocean_build_android/thirdparty" \
             -i "/home/runner/work/ocean/ocean/ocean_thirdparty_install_android" \
-            --abi $ABI \
+            --abi ${{ inputs.abi }} \
             --sdk ${{ inputs.android_sdk_version }}
-        env:
-          OCEAN_LINK_TYPE: ${{ env.LINK_TYPE }}
-          OCEAN_THIRDPARTY_INSTALL_PATH: /home/runner/work/ocean/ocean/ocean_thirdparty_install_android
-          OCEAN_BUILD_PATH: /home/runner/work/ocean/ocean/ocean_build_android
-          OCEAN_INSTALL_PATH: /home/runner/work/ocean/ocean/ocean_install_android
-          ANDROID_HOME: /usr/local/lib/android/sdk
-          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
-          ANDROID_NDK: /usr/local/lib/android/sdk/ndk/27.0.12077973
 
       - name: Cache Third-Party Dependencies
         uses: actions/cache@v3
@@ -116,16 +101,26 @@ jobs:
           path: /home/runner/work/ocean/ocean/ocean_thirdparty_install_android
           key: thirdparty-${{ runner.os }}-${{ inputs.abi }}-${{ inputs.build_config }}
 
-      - name: Build Ocean Android Libraries
+      - name: Check if Ocean Android Libraries Exist
+        id: check_ocean_lib
+        run: |
+          if [ -d "/home/runner/work/ocean/ocean/ocean_install_android" ] && [ "$(ls -A /home/runner/work/ocean/ocean/ocean_install_android)" ]; then
+            echo "OCEAN_LIB_EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "OCEAN_LIB_EXISTS=false" >> $GITHUB_ENV
+          fi
+
+      - name: Build Ocean Android Libraries (if not cached)
+        if: env.OCEAN_LIB_EXISTS == 'false'
         shell: bash
         run: |
           ./build/cmake/build_ocean_android.sh \
             -c ${{ inputs.build_config }} \
-            -l ${{ env.LINK_TYPE }} \
+            -l ${{ inputs.link_type }} \
             -b "/home/runner/work/ocean/ocean/ocean_build_android/ocean" \
             -i "/home/runner/work/ocean/ocean/ocean_install_android" \
             -t "/home/runner/work/ocean/ocean/ocean_thirdparty_install_android" \
-            --abi $ABI \
+            --abi ${{ inputs.abi }} \
             --sdk ${{ inputs.android_sdk_version }}
 
       - name: Cache Ocean Android Libraries
@@ -136,7 +131,7 @@ jobs:
 
       - name: Build and Upload Android Apps Sequentially
         run: |
-          export OCEAN_DEVELOPMENT_PATH=/home/runner/work/ocean/ocean  # Ensure this is correctly set
+          export OCEAN_DEVELOPMENT_PATH=/home/runner/work/ocean/ocean
           for app in \
             "demo/media/videopreview" \
             "demo/tracking/pointtracker" \
@@ -150,7 +145,6 @@ jobs:
                 ./gradlew assemble
                 cp app/build/outputs/apk/debug/app-debug.apk ocean_${app//\//_}_debug.apk
                 cp app/build/outputs/apk/release/app-release.apk ocean_${app//\//_}_release.apk
-                
                 gh run upload-artifact --name ocean_${app//\//_}_debug_apk --path ocean_${app//\//_}_debug.apk
                 gh run upload-artifact --name ocean_${app//\//_}_release_apk --path ocean_${app//\//_}_release.apk
               else
