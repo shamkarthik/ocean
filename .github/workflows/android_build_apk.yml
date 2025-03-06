@@ -66,7 +66,7 @@ jobs:
       - name: Restore Third-Party Dependencies Cache
         uses: actions/cache@v3
         with:
-          path: ${HOME}/install_ocean_thirdparty
+          path: ${GITHUB_WORKSPACE}/install_ocean_thirdparty_android
           key: thirdparty-${{ runner.os }}-${{ inputs.abi }}-${{ inputs.build_config }}
           restore-keys: |
             thirdparty-${{ runner.os }}-${{ inputs.abi }}-
@@ -74,19 +74,27 @@ jobs:
       - name: Restore Ocean Android Libraries Cache
         uses: actions/cache@v3
         with:
-          path: ${HOME}/install_ocean
+          path: ${GITHUB_WORKSPACE}/install_ocean
           key: ocean-${{ runner.os }}-${{ inputs.abi }}-${{ inputs.build_config }}
           restore-keys: |
             ocean-${{ runner.os }}-${{ inputs.abi }}-
 
       - name: Set Environment Variables
         run: |
-          export OCEAN_THIRDPARTY_PATH=${HOME}/install_ocean_thirdparty
-          export OCEAN_INSTALL_PATH=${HOME}/install_ocean
-          export OCEAN_DEVELOPMENT_PATH=${HOME}/ocean
+          export OCEAN_THIRDPARTY_PATH=${GITHUB_WORKSPACE}/install_ocean_thirdparty_android
+          export OCEAN_INSTALL_PATH=${GITHUB_WORKSPACE}/install_ocean
+          export OCEAN_DEVELOPMENT_PATH=${GITHUB_WORKSPACE}/ocean
           echo "OCEAN_THIRDPARTY_PATH=${OCEAN_THIRDPARTY_PATH}" >> $GITHUB_ENV
           echo "OCEAN_INSTALL_PATH=${OCEAN_INSTALL_PATH}" >> $GITHUB_ENV
           echo "OCEAN_DEVELOPMENT_PATH=${OCEAN_DEVELOPMENT_PATH}" >> $GITHUB_ENV
+
+      - name: Set Eigen3 Directory and Update CMAKE_PREFIX_PATH
+        run: |
+          # Adjust the path below if Eigen3 is installed in a different location.
+          export Eigen3_DIR=${OCEAN_THIRDPARTY_PATH}/eigen3
+          export CMAKE_PREFIX_PATH=${OCEAN_THIRDPARTY_PATH}/eigen3:$CMAKE_PREFIX_PATH
+          echo "Eigen3_DIR=${Eigen3_DIR}" >> $GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}" >> $GITHUB_ENV
 
       - name: Debug Third-Party Cache
         run: ls -l ${OCEAN_THIRDPARTY_PATH}
@@ -115,15 +123,15 @@ jobs:
           ./build/cmake/build_thirdparty_android.sh \
             -c ${{ inputs.build_config }} \
             -l ${{ inputs.link_type }} \
-            -b "${HOME}/build_ocean_thirdparty" \
-            -i "${HOME}/install_ocean_thirdparty" \
+            -b "${GITHUB_WORKSPACE}/build_ocean_thirdparty" \
+            -i "${OCEAN_THIRDPARTY_PATH}" \
             --abi ${{ inputs.abi }} \
             --sdk ${{ inputs.android_sdk_version }}
 
       - name: Cache Third-Party Dependencies
         uses: actions/cache@v3
         with:
-          path: ${HOME}/install_ocean_thirdparty
+          path: ${GITHUB_WORKSPACE}/install_ocean_thirdparty_android
           key: thirdparty-${{ runner.os }}-${{ inputs.abi }}-${{ inputs.build_config }}
 
       - name: Check if Ocean Android Libraries Exist
@@ -143,30 +151,37 @@ jobs:
           ./build/cmake/build_ocean_android.sh \
             -c ${{ inputs.build_config }} \
             -l ${{ inputs.link_type }} \
-            -b "${HOME}/build_ocean" \
-            -i "${HOME}/install_ocean" \
-            -t "${HOME}/install_ocean_thirdparty" \
+            -b "${GITHUB_WORKSPACE}/build_ocean" \
+            -i "${OCEAN_INSTALL_PATH}" \
+            -t "${OCEAN_THIRDPARTY_PATH}" \
             --abi ${{ inputs.abi }} \
             --sdk ${{ inputs.android_sdk_version }}
 
       - name: Cache Ocean Android Libraries
         uses: actions/cache@v3
         with:
-          path: ${HOME}/install_ocean
+          path: ${GITHUB_WORKSPACE}/install_ocean
           key: ocean-${{ runner.os }}-${{ inputs.abi }}-${{ inputs.build_config }}
 
       - name: Build and Upload Android Apps Sequentially
         run: |
-          export OCEAN_DEVELOPMENT_PATH=${HOME}/ocean
-          # In this example, we're building the "demo/base/console" app as described in the docs.
-          APP_DIR="$OCEAN_DEVELOPMENT_PATH/build/gradle/application/ocean/demo/base/console/android"
-          if [ -d "$APP_DIR" ]; then
-            cd "$APP_DIR"
-            ./gradlew build
-            cp app/build/outputs/apk/debug/app-debug.apk ocean_demo_base_console_debug.apk
-            cp app/build/outputs/apk/release/app-release.apk ocean_demo_base_console_release.apk
-            gh run upload-artifact --name ocean_demo_base_console_debug_apk --path ocean_demo_base_console_debug.apk
-            gh run upload-artifact --name ocean_demo_base_console_release_apk --path ocean_demo_base_console_release.apk
-          else
-            echo "Skipping demo/base/console as directory does not exist."
-          fi
+          export OCEAN_DEVELOPMENT_PATH=${GITHUB_WORKSPACE}/ocean
+          for app in \
+            "demo/media/videopreview" \
+            "demo/tracking/pointtracker" \
+            "demo/tracking/featuretracker" \
+            "demo/tracking/similaritytracker" \
+            "demo/cv/detector/linedetector" \
+            "shark"; do
+              APP_DIR="$OCEAN_DEVELOPMENT_PATH/build/gradle/application/ocean/$app/android"
+              if [ -d "$APP_DIR" ]; then
+                cd "$APP_DIR"
+                ./gradlew build
+                cp app/build/outputs/apk/debug/app-debug.apk ocean_${app//\\//_}_debug.apk
+                cp app/build/outputs/apk/release/app-release.apk ocean_${app//\\//_}_release.apk
+                gh run upload-artifact --name ocean_${app//\\//_}_debug_apk --path ocean_${app//\\//_}_debug.apk
+                gh run upload-artifact --name ocean_${app//\\//_}_release_apk --path ocean_${app//\\//_}_release.apk
+              else
+                echo "Skipping $app as directory does not exist."
+              fi
+          done
