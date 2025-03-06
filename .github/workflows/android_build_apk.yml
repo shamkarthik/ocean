@@ -136,6 +136,7 @@ jobs:
 
       - name: Build and Upload Android Apps Sequentially
         run: |
+          export OCEAN_DEVELOPMENT_PATH=/home/runner/work/ocean/ocean  # Ensure this is correctly set
           for app in \
             "demo/media/videopreview" \
             "demo/tracking/pointtracker" \
@@ -150,9 +151,8 @@ jobs:
                 cp app/build/outputs/apk/debug/app-debug.apk ocean_${app//\//_}_debug.apk
                 cp app/build/outputs/apk/release/app-release.apk ocean_${app//\//_}_release.apk
                 
-                # Upload APKs immediately after building each app
-                gh run upload-artifact --name ocean_${app//\//_}_apk --path ocean_${app//\//_}_debug.apk
-                gh run upload-artifact --name ocean_${app//\//_}_apk --path ocean_${app//\//_}_release.apk
+                gh run upload-artifact --name ocean_${app//\//_}_debug_apk --path ocean_${app//\//_}_debug.apk
+                gh run upload-artifact --name ocean_${app//\//_}_release_apk --path ocean_${app//\//_}_release.apk
               else
                 echo "Skipping $app as directory does not exist."
               fi
