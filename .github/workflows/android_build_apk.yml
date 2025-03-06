@@ -68,12 +68,16 @@ jobs:
         with:
           path: /home/runner/work/ocean/ocean/ocean_thirdparty_install_android
           key: thirdparty-${{ runner.os }}-${{ inputs.abi }}-${{ inputs.build_config }}
+          restore-keys: |
+            thirdparty-${{ runner.os }}-${{ inputs.abi }}-
 
       - name: Restore Ocean Android Libraries Cache
         uses: actions/cache@v3
         with:
           path: /home/runner/work/ocean/ocean/ocean_install_android
           key: ocean-${{ runner.os }}-${{ inputs.abi }}-${{ inputs.build_config }}
+          restore-keys: |
+            ocean-${{ runner.os }}-${{ inputs.abi }}-
 
       - name: Set Environment Variables
         run: |
@@ -81,14 +85,16 @@ jobs:
           export OCEAN_INSTALL_PATH=/home/runner/work/ocean/ocean/ocean_install_android
           echo "OCEAN_THIRDPARTY_PATH=$OCEAN_THIRDPARTY_PATH" >> $GITHUB_ENV
           echo "OCEAN_INSTALL_PATH=$OCEAN_INSTALL_PATH" >> $GITHUB_ENV
-
+          echo "OCEAN_DEVELOPMENT_PATH=/home/runner/work/ocean/ocean" >> $GITHUB_ENV
+          echo "OCEAN_DEVELOPMENT_PATH is set to: /home/runner/work/ocean/ocean"
+      
       - name: Debug Third-Party Cache
         run: ls -l $OCEAN_THIRDPARTY_PATH
 
-      - name: Fix Permissions
+      - name: Fix Permissions for Third-Party Directory
         run: |
           if [ -d "$OCEAN_THIRDPARTY_PATH" ]; then
-            sudo chmod -R 777 $OCEAN_THIRDPARTY_PATH
+            sudo chmod -R 777 "$OCEAN_THIRDPARTY_PATH"
           else
             echo "$OCEAN_THIRDPARTY_PATH does not exist, skipping chmod."
           fi
@@ -101,6 +107,7 @@ jobs:
           else
             echo "THIRDPARTY_EXISTS=false" >> $GITHUB_ENV
           fi
+          echo "THIRDPARTY_EXISTS is set to: $THIRDPARTY_EXISTS"
 
       - name: Build Third-Party Dependencies (if not cached)
         if: env.THIRDPARTY_EXISTS == 'false'
@@ -127,6 +134,7 @@ jobs:
           else
             echo "OCEAN_LIB_EXISTS=false" >> $GITHUB_ENV
           fi
+          echo "OCEAN_LIB_EXISTS is set to: $OCEAN_LIB_EXISTS"
 
       - name: Build Ocean Android Libraries (if not cached)
         if: env.OCEAN_LIB_EXISTS == 'false'
@@ -161,10 +169,10 @@ jobs:
               if [ -d "$APP_DIR" ]; then
                 cd "$APP_DIR"
                 ./gradlew assemble
-                cp app/build/outputs/apk/debug/app-debug.apk ocean_${app//\//_}_debug.apk
-                cp app/build/outputs/apk/release/app-release.apk ocean_${app//\//_}_release.apk
-                gh run upload-artifact --name ocean_${app//\//_}_debug_apk --path ocean_${app//\//_}_debug.apk
-                gh run upload-artifact --name ocean_${app//\//_}_release_apk --path ocean_${app//\//_}_release.apk
+                cp app/build/outputs/apk/debug/app-debug.apk ocean_${app//\\//_}_debug.apk
+                cp app/build/outputs/apk/release/app-release.apk ocean_${app//\\//_}_release.apk
+                gh run upload-artifact --name ocean_${app//\\//_}_debug_apk --path ocean_${app//\\//_}_debug.apk
+                gh run upload-artifact --name ocean_${app//\\//_}_release_apk --path ocean_${app//\\//_}_release.apk
               else
                 echo "Skipping $app as directory does not exist."
               fi
